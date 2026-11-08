@@ -1,5 +1,5 @@
 #
-# Basic yaml code to get the ESP32-2432S028R display to work in ESPHome.
+# Basic yaml code to get the ESP32-2432S024C display to work in ESPHome.
 #
 # This yaml displays the ESPHome logo and the current date and time.
 #
@@ -35,7 +35,7 @@ esphome:
   name: $device_name
   friendly_name: $friendly_name
  
-# The ESP32-2432S028R uses a standard ESP32-WROVER, so we use the esp32dev defintion
+# The ESP32-2432S024C uses a standard ESP32-WROVER, so we use the esp32dev defintion
 esp32:
   board: esp32dev
   framework:
@@ -110,24 +110,20 @@ time:
 # ============================================================ 
 # Hardware related setup
 #
-# Setup SPI for the display. The ESP32-2432S028R uses separate SPI buses for display and touch
+# Setup SPI for the display. The ESP32-2432S024C uses an SPI bus for display
 spi:
   - id: tft
     clk_pin: GPIO14
     mosi_pin: GPIO13
     miso_pin: GPIO12
-  - id: touch
-    clk_pin: GPIO25
-    mosi_pin: GPIO32
-    miso_pin: GPIO39
 
 # Setup a pin to control the backlight
 output:
   - platform: ledc
-    pin: GPIO21
+    pin: GPIO27
     id: backlight_pwm
 
-# Setup the ili9xxx platform
+# Setup the mipi_spi platform
 #
 # Display is used as 240x320 by default so we rotate it to 90°
 #
@@ -135,17 +131,12 @@ output:
 # format date and atime to your locale.
 #
 display:
-  - platform: ili9xxx
+  - platform: mipi_spi
     model: ili9341
     spi_id: tft
     cs_pin: GPIO15
     dc_pin: GPIO2
-    color_palette: 8BIT # Fix memory issues with ESPHome 25.x
-    dimensions:
-      height: 240
-      width: 320
-    transform:
-      swap_xy: true
+    rotation: 90
     invert_colors: false
     lambda: |-
       it.fill(id(ha_blue));
