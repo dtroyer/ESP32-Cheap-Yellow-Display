@@ -1,5 +1,5 @@
 #
-# Basic yaml code to get the ESP32-2432S028R display to work in ESPHome.
+# Basic yaml code to get the ESP32-2432S024C display to work in ESPHome.
 #
 # This yaml displays two circles with icons in them acting as binary touch sensors inside of Home Assistant.
 # It turns off the backlight after 30-60 seconds 
@@ -36,7 +36,7 @@ esphome:
   name: $device_name
   friendly_name: $friendly_name
  
-# The ESP32-2432S028R uses a standard ESP32-WROVER, so we use the esp32dev defintion
+# The ESP32-2432S024C uses a standard ESP32-WROVER, so we use the esp32dev defintion
 esp32:
   board: esp32dev
   framework:
@@ -146,21 +146,23 @@ binary_sensor:
 # ============================================================ 
 # Hardware related setup
 #
-# Setup SPI for the display. The ESP32-2432S028R uses separate SPI buses for display and touch
+# Setup SPI for the display. The ESP32-2432S024C uses an SPI bus for display
 spi:
   - id: tft
     clk_pin: GPIO14
     mosi_pin: GPIO13
     miso_pin: GPIO12
-  - id: touch
-    clk_pin: GPIO25
-    mosi_pin: GPIO32
-    miso_pin: GPIO39
+
+# Setup i2c for the touchscreen
+i2c:
+  id: i2c_touch
+  sda: GPIO33
+  scl: GPIO32
 
 # Setup a pin to control the backlight and channels for the red/green/blue of the LED on the back
 output:
   - platform: ledc
-    pin: GPIO21
+    pin: GPIO27
     id: backlight_pwm
   - platform: ledc
     id: output_red
@@ -215,20 +217,16 @@ interval:
             - lambda: |-
                 id(recent_touch) = false;
 
-# Setup the ili9xxx platform
+# Setup the mipi_spi platform
 #
 # Display is used as 240x320 by default so we rotate it to 90°
 display:
-  - platform: ili9xxx
+  - platform: mipi_spi
     model: ili9341
     spi_id: tft
     cs_pin: GPIO15
     dc_pin: GPIO2
-    transform:
-      swap_xy: true
-    dimensions:
-      width: 320
-      height: 240
+    rotation: 90
     invert_colors: false
     lambda: |-
       it.fill(id(Color::BLACK));
@@ -238,19 +236,18 @@ display:
       it.print(240, 120, id(mdi_large), TextAlign::CENTER, "󰹏");
       it.print(296, 0, id(mdi_medium), id(wifi_iconstring).c_str());
 
-# Set up the xpt2046 touch platform
+# Set up the cst820 touch platform (compatible with cst816)
 touchscreen:
-  platform: xpt2046
-  spi_id: touch
-  cs_pin: GPIO33
-  interrupt_pin: GPIO36
+  platform: cst816
+  i2c_id: i2c_touch
+  reset_pin: GPIO25
   update_interval: 50ms
-  threshold: 400
+  skip_probe: true
   calibration:
-    x_min: 180
-    x_max: 3800
-    y_min: 240
-    y_max: 3860
+    x_min: 0
+    x_max: 320
+    y_min: 0
+    y_max: 240
   transform:
     swap_xy: true
 # When the display is touched, turn on the backlight,
