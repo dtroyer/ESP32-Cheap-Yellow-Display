@@ -94,7 +94,7 @@ color:
 image:
   - file: "images/esphome.png"
     id: esphome_image
-    type: RGB24
+    type: RGB
 
 # ============================================================ 
 # Home Assistant related setup
@@ -179,10 +179,12 @@ spi:
     clk_pin: GPIO14
     mosi_pin: GPIO13
     miso_pin: GPIO12
-  - id: spi_touch
-    clk_pin: GPIO25
-    mosi_pin: GPIO32
-    miso_pin: GPIO39
+
+# Setup i2c for the touchscreen
+i2c:
+  id: i2c_touch
+  sda: GPIO33
+  scl: GPIO32
 
 switch:
   # Board power switches
@@ -196,7 +198,7 @@ switch:
 output:
 # Setup a pin to control the backlight
   - platform: ledc
-    pin: GPIO21
+    pin: GPIO27
     id: backlight_pwm
 # Setup the pins that control the RGB LED
   - platform: ledc
@@ -212,15 +214,15 @@ output:
     id: led_blue
     inverted: true
 
-i2s_audio:
-  i2s_lrclk_pin: GPIO25
-  i2s_bclk_pin: GPIO26
+# i2s_audio:
+#   i2s_lrclk_pin: GPIO25
+#   i2s_bclk_pin: GPIO26
 
-media_player:
-  - platform: i2s_audio
-    name: ESPHome I2S Media Player
-    dac_type: internal
-    mode: stereo
+# media_player:
+#   - platform: i2s_audio
+#     name: ESPHome I2S Media Player
+#     dac_type: internal
+#     mode: stereo
 
 
 # Setup the ili9xxx platform
@@ -296,20 +298,18 @@ display:
 
 
 
-# Set up the xpt2046 touch platform
+# Set up the cst820 touch platform (compatible with cst816)
 touchscreen:
-  platform: xpt2046
-  id: esp_touchscreen
-  spi_id: spi_touch
-  cs_pin: GPIO33
-  interrupt_pin: GPIO36
+  platform: cst816
+  i2c_id: i2c_touch
+  reset_pin: GPIO25
   update_interval: 50ms
-  threshold: 400
+  skip_probe: true
   calibration:
-    x_min: 3860
-    x_max: 280
-    y_min: 340
-    y_max: 3860
+    x_min: 0
+    x_max: 320
+    y_min: 0
+    y_max: 240
   transform:
     swap_xy: true
   # Calibration for the display
